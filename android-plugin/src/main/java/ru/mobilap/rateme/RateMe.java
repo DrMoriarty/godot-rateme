@@ -9,10 +9,17 @@ import android.view.View;
 import android.util.Log;
 import android.os.Build;
 import android.net.Uri;
+import java.util.Collections;
 import java.util.Map;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Set;
+
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.tasks.Task;
 
 import org.godotengine.godot.Godot;
 import org.godotengine.godot.GodotLib;
@@ -21,11 +28,10 @@ import org.godotengine.godot.plugin.SignalInfo;
 
 public class RateMe extends GodotPlugin {
 
-    private Godot activity = null;
+    final private SignalInfo finishedSignal = new SignalInfo("finished");
 
     public RateMe(Godot godot) {
         super(godot);
-        activity = godot;
     }
 
     @Override
@@ -38,12 +44,10 @@ public class RateMe extends GodotPlugin {
         return Arrays.asList("showRateMe");
     }
 
-    /*
     @Override
     public Set<SignalInfo> getPluginSignals() {
-        return Collections.singleton(loggedInSignal);
+        return Collections.singleton(finishedSignal);
     }
-    */
 
     @Override
     public View onMainCreate(Activity activity) {
@@ -53,12 +57,33 @@ public class RateMe extends GodotPlugin {
     // Public methods
 
     public void showRateMe() {
-        try {
-            Intent rateIntent = rateIntentForUrl("market://details");
-            activity.startActivity(rateIntent);
-        } catch (ActivityNotFoundException e) {
-            Intent rateIntent = rateIntentForUrl("https://play.google.com/store/apps/details");
-            activity.startActivity(rateIntent);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP ) {
+            ReviewManager manager = ReviewManagerFactory.create(getActivity());
+            Task<ReviewInfo> request = manager.requestReviewFlow();
+            request.addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        // We can get the ReviewInfo object
+                        ReviewInfo reviewInfo = task.getResult();
+                        Task<Void> flow = manager.launchReviewFlow(getActivity(), reviewInfo);
+                        flow.addOnCompleteListener(task2 -> {
+                                // The flow has finished. The API does not indicate whether the user
+                                // reviewed or not, or even whether the review dialog was shown. Thus, no
+                                // matter the result, we continue our app flow.
+                                emitSignal(finishedSignal.getName());
+                            });
+                    } else {
+                        // There was some problem, continue regardless of the result.
+                        emitSignal(finishedSignal.getName());
+                    }
+                });
+        } else {
+            try {
+                Intent rateIntent = rateIntentForUrl("market://details");
+                getActivity().startActivity(rateIntent);
+            } catch (ActivityNotFoundException e) {
+                Intent rateIntent = rateIntentForUrl("https://play.google.com/store/apps/details");
+                getActivity().startActivity(rateIntent);
+            }
         }
     }
 
@@ -66,7 +91,7 @@ public class RateMe extends GodotPlugin {
 
     private Intent rateIntentForUrl(String url)
     {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(String.format("%s?id=%s", url, activity.getPackageName())));
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(String.format("%s?id=%s", url, getActivity().getPackageName())));
         int flags = Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_MULTIPLE_TASK;
         if (Build.VERSION.SDK_INT >= 21) {
             flags |= Intent.FLAG_ACTIVITY_NEW_DOCUMENT;
