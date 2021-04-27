@@ -9,9 +9,6 @@ func _ready():
         _ln = Engine.get_singleton("RateMe")
         print('RateMe plugin inited')
         _ln.connect('finished', self, '_on_rateme_finished')
-    elif OS.get_name() == 'iOS':
-        _ln = load("res://addons/rateme-ios/rateme.gdns").new()
-        print('RateMe plugin inited')
     else:
         push_warning('RateMe plugin not found!')
 

@@ -1,11 +1,17 @@
 {
   "name": "rateme",
+  "display_name": "RateMe",
   "description": "Plugin for asking user to rate your app",
-  "version": "0.1.0",
+  "version": "0.2.0",
+  "godot_version": "3.3.0",
   "license": "MIT",
+  "category": "misc",
   "url": "https://github.com/DrMoriarty/godot-rateme.git",
-  "dependencies": [
-  ],
+  "author": {
+    "name": "DrMoriarty",
+    "url": "https://github.com/DrMoriarty",
+    "donate": "https://ko-fi.com/drmoriarty"
+  },
   "files": {
     "scripts": "scripts"
   },
@@ -13,13 +19,10 @@
     "rateme": "*res://scripts/rateme.gd"
   },
   "platform_ios": {
-    "dependencies": [
-    ],
     "files": {
-      "ios-framework/build/rateme.gdnlib": "addons/rateme-ios/",
-      "ios-framework/build/rateme.gdns": "addons/rateme-ios/",
-      "ios-framework/build/.gitignore": "addons/rateme-ios/",
-      "ios-framework/build/rateme.xcframework": "addons/rateme-ios/rateme.xcframework"
+      "ios-plugin/bin/rateme.debug.xcframework": "ios/plugins/rateme/rateme.debug.xcframework",
+      "ios-plugin/bin/rateme.release.xcframework": "ios/plugins/rateme/rateme.release.xcframework",
+      "ios-plugin/rateme.gdip": "ios/plugins/rateme/"
     }
   },
   "platform_android": {
